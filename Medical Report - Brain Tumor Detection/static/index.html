@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroScan AI - Brain Tumor Detection & Machine Learning Diagnostic Studio</title>
+  <meta name="description" content="End-to-End Brain Tumor Detection using Machine Learning. Image Preprocessing, GLCM Feature Extraction, Multi-Algorithm Training, Performance Evaluation, and In-App Python Sandbox.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js for High-Fidelity Diagnostic Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="brand-icon"><i class="fa-solid fa-brain"></i></div>
+      <div>
+        <span class="brand-title">NEUROSCAN AI</span>
+        <span class="brand-tag">ML DIAGNOSTICS v2.0</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab-btn active" data-tab="tab-studio">
+        <i class="fa-solid fa-layer-group"></i> Diagnostic Studio (All-In-One Frame)
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-playground">
+        <i class="fa-solid fa-code"></i> Python Sandbox (Type & Run)
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-guide">
+        <i class="fa-solid fa-terminal"></i> How to Compile & Run
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-gallery">
+        <i class="fa-solid fa-images"></i> MRI Gallery
+      </button>
+    </div>
+
+    <!-- Right Header Actions -->
+    <div class="nav-actions">
+      <div class="status-badge">
+        <div class="pulse-dot"></div>
+        <span>ML Core Active (6 Models Ready)</span>
+      </div>
+      <button id="openReportBtn" class="btn-report">
+        <i class="fa-solid fa-file-medical"></i> Medical Report
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="app-main">
+
+    <!-- ====================================================================
+         TAB 1: UNIFIED ALL-IN-ONE DIAGNOSTIC STUDIO
+         ==================================================================== -->
+    <section id="tab-studio" class="tab-content active">
+      <div class="studio-grid">
+
+        <!-- Left Sidebar: MRI Image Input & Controls -->
+        <aside class="studio-sidebar">
+          <div class="glass-panel">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fa-solid fa-upload"></i> 1. Load Input Image</div>
+              <span class="panel-badge">DICOM / JPG / PNG</span>
+            </div>
+
+            <!-- Drag & Drop Upload Zone -->
+            <div id="uploadDropzone" class="upload-dropzone">
+              <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+              <div class="dropzone-text">Drop Brain MRI Scan Here</div>
+              <div class="dropzone-subtext">or click to browse local files</div>
+              <input type="file" id="mriFileInput" accept="image/*" style="display: none;">
+            </div>
+
+            <!-- Curated Sample MRI Library -->
+            <div class="samples-selector-title">Or Choose Sample Clinical Scan:</div>
+            <div id="samplePillsContainer" class="sample-pills">
+              <!-- Dynamically populated from /api/samples -->
+            </div>
+
+            <!-- Active Scan Preview Card -->
+            <div style="margin-top: 1.25rem; background: var(--bg-input); border-radius: var(--radius-md); padding: 0.85rem; border: 1px solid var(--border-color);">
+              <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem;">ACTIVE SCAN FOR INFERENCE:</div>
+              <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <img id="selectedImagePreview" src="/sample_images/sample_glioma_case1.png" style="width: 60px; height: 60px; border-radius: 6px; object-fit: contain; background: #000;" alt="Preview">
+                <div>
+                  <div id="selectedImageName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">sample_glioma_case1.png</div>
+                  <div style="font-size: 0.72rem; color: var(--accent-cyan); margin-top: 2px;">Ready for Full Pipeline</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Master Pipeline Run Button -->
+            <button id="runPipelineBtn" class="btn-primary" style="width: 100%; margin-top: 1rem;">
+              <i class="fa-solid fa-play"></i> Execute Full Pipeline
+            </button>
+          </div>
+        </aside>
+
+        <!-- Right Master Panel: All Stages in One Unified Frame -->
+        <div class="studio-main-panel">
+
+          <!-- Diagnostic Result Banner -->
+          <div id="diagnosisBanner" class="glass-panel" style="margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 260px;">
+              <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">DIAGNOSTIC VERDICT (MACHINE LEARNING)</div>
+              <div id="diagnosisStatusText" style="margin: 0.25rem 0;">
+                <span style="color: var(--accent-red); font-size: 1.35rem; font-weight: 800;">🚨 BRAIN TUMOR DETECTED (POSITIVE)</span>
+              </div>
+              <div id="diagnosisSubtypeText" style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">
+                Lesion Subtype: Glioma / Glioblastoma Multiforme (High Grade)
+              </div>
+              <div id="diagnosisConfidenceText" style="font-size: 0.8rem; color: var(--accent-cyan); margin-top: 4px;">
+                94.5% Confidence (Support Vector Machine)
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted);">TUMOR LOCALIZATION ROI</div>
+                <div style="font-size: 0.75rem; color: var(--accent-amber); font-weight: 700;">Bounding Overlay</div>
+              </div>
+              <img id="diagnosisOverlayImg" src="" style="width: 85px; height: 85px; border-radius: 8px; object-fit: contain; background: #000; border: 1px solid var(--border-color);" alt="Tumor Overlay">
+            </div>
+          </div>
+
+          <!-- Workflow Stage Switcher Tabs -->
+          <div class="workflow-stages">
+            <button class="stage-btn active" data-stage="stage-view-preprocess">
+              <div class="stage-num">2</div>
+              <div class="stage-meta">
+                <span class="stage-name">Preprocessor</span>
+                <span class="stage-desc">7 Visual Filters</span>
+              </div>
+            </button>
+            <button class="stage-btn" data-stage="stage-view-features">
+              <div class="stage-num">3</div>
+              <div class="stage-meta">
+                <span class="stage-name">Feature Extraction</span>
+                <span class="stage-desc">GLCM & Statistics</span>
+              </div>
+            </button>
+            <button class="stage-btn" data-stage="stage-view-training">
+              <div class="stage-num">4</div>
+              <div class="stage-meta">
+                <span class="stage-name">Model Training</span>
+                <span class="stage-desc">Hyperparameters</span>
+              </div>
+            </button>
+            <button class="stage-btn" data-stage="stage-view-evaluation">
+              <div class="stage-num">5</div>
+              <div class="stage-meta">
+                <span class="stage-name">Evaluation</span>
+                <span class="stage-desc">ROC & Confusion Matrix</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- ================================================================
+               STAGE 2: PREPROCESSOR VIEW
+               ================================================================ -->
+          <div id="stage-view-preprocess" class="pipeline-view-section active">
+            <div class="glass-panel">
+              <div class="panel-header">
+                <div class="panel-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Step 2: Preprocessor Stages</div>
+                <span class="panel-badge">Skull-Stripping • CLAHE • ROI Masking</span>
+              </div>
+
+              <!-- Preprocessing Metadata Bar -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; background: var(--bg-input); padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.8rem;">
+                <div>
+                  <span style="color: var(--text-muted);">Target Dimensions:</span>
+                  <strong id="prepMetaDimensions" style="color: #fff; margin-left: 4px;">256x256</strong>
+                </div>
+                <div>
+                  <span style="color: var(--text-muted);">Brain Tissue:</span>
+                  <strong id="prepMetaPixels" style="color: var(--accent-cyan); margin-left: 4px;">41,200 px</strong>
+                </div>
+                <div>
+                  <span style="color: var(--text-muted);">Mean Intensity:</span>
+                  <strong id="prepMetaIntensity" style="color: #fff; margin-left: 4px;">92.5</strong>
+                </div>
+                <div>
+                  <span style="color: var(--text-muted);">ROI Status:</span>
+                  <span id="prepTumorCandidateStatus" style="margin-left: 4px;">Lesion Highlighted</span>
+                </div>
+              </div>
+
+              <!-- 8-Stage Image Grid -->
+              <div id="mriVisualGrid" class="mri-visual-grid">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ================================================================
+               STAGE 3: FEATURE EXTRACTION VIEW
+               ================================================================ -->
+          <div id="stage-view-features" class="pipeline-view-section">
+            <div class="glass-panel">
+              <div class="panel-header">
+                <div class="panel-title"><i class="fa-solid fa-chart-pie"></i> Step 3: Feature Extraction (GLCM Textures & Moments)</div>
+                <span class="panel-badge">20 Diagnostic Descriptors</span>
+              </div>
+
+              <div class="features-container">
+                <!-- Left: Tables of Features -->
+                <div>
+                  <div class="feature-group-title"><i class="fa-solid fa-shapes"></i> GLCM Second-Order Textures</div>
+                  <table class="feature-table">
+                    <thead>
+                      <tr>
+                        <th>Descriptor</th>
+                        <th>Extracted Value</th>
+                        <th>Reference Baseline</th>
+                      </tr>
+                    </thead>
+                    <tbody id="glcmTableBody">
+                      <!-- Dynamic -->
+                    </tbody>
+                  </table>
+
+                  <div class="feature-group-title"><i class="fa-solid fa-calculator"></i> First-Order Intensity Moments</div>
+                  <table class="feature-table">
+                    <thead>
+                      <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Normal Range</th>
+                      </tr>
+                    </thead>
+                    <tbody id="statsTableBody">
+                      <!-- Dynamic -->
+                    </tbody>
+                  </table>
+
+                  <div class="feature-group-title"><i class="fa-solid fa-draw-polygon"></i> Morphological Shape Metrics</div>
+                  <table class="feature-table">
+                    <thead>
+                      <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Reference Range</th>
+                      </tr>
+                    </thead>
+                    <tbody id="morphTableBody">
+                      <!-- Dynamic -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Right: Radar Chart & Mathematical Breakdown -->
+                <div>
+                  <div style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; height: 350px;">
+                    <div style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; text-align: center;">
+                      GLCM Texture Profile vs Healthy Brain Baseline
+                    </div>
+                    <canvas id="glcmRadarChart"></canvas>
+                  </div>
+
+                  <div style="margin-top: 1rem; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6;">
+                    <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-circle-info"></i> Why GLCM Features Matter:</strong>
+                    <p style="margin-top: 4px;">
+                      Gray-Level Co-occurrence Matrix (GLCM) analyzes spatial relationships of voxel gray levels. Brain tumors (e.g., Glioblastoma) cause micro-structural disruptions that dramatically elevate <strong>GLCM Contrast</strong> and <strong>Entropy</strong> while reducing <strong>Homogeneity</strong> compared to organized healthy brain tissue.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================================================================
+               STAGE 4: MODEL TRAINING VIEW
+               ================================================================ -->
+          <div id="stage-view-training" class="pipeline-view-section">
+            <div class="glass-panel">
+              <div class="panel-header">
+                <div class="panel-title"><i class="fa-solid fa-brain"></i> Step 4: Machine Learning Model Training</div>
+                <span class="panel-badge">Scikit-Learn Multi-Algorithm Engine</span>
+              </div>
+
+              <!-- Interactive Controls -->
+              <div class="training-controls-grid">
+                <div class="control-group">
+                  <label class="control-label">Algorithm Selection</label>
+                  <select id="modelSelector" class="control-select">
+                    <option value="svm" selected>Support Vector Machine (SVM)</option>
+                    <option value="random_forest">Random Forest Classifier</option>
+                    <option value="knn">K-Nearest Neighbors (KNN)</option>
+                    <option value="decision_tree">Decision Tree Classifier</option>
+                    <option value="logistic_regression">Logistic Regression</option>
+                    <option value="gradient_boosting">Gradient Boosting Classifier</option>
+                  </select>
+                </div>
+
+                <div class="control-group">
+                  <label class="control-label">
+                    <span>Train/Test Split</span>
+                    <span id="testSplitLabel" style="color: var(--accent-cyan);">20% Test Split</span>
+                  </label>
+                  <input type="range" id="testSplitSlider" min="0.10" max="0.40" step="0.05" value="0.20" class="control-input" style="padding: 0; cursor: pointer;">
+                </div>
+
+                <div class="control-group" style="justify-content: flex-end;">
+                  <button id="trainBtn" class="btn-primary" style="height: 42px;">
+                    ⚡ Train Model Live
+                  </button>
+                </div>
+              </div>
+
+              <!-- Performance Summary Cards -->
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <div class="metric-title">Accuracy</div>
+                  <div id="metricAccuracy" class="metric-value metric-val-cyan">100.0%</div>
+                  <div class="metric-sub">5-Fold CV Validated</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-title">F1-Score</div>
+                  <div id="metricF1" class="metric-value metric-val-green">100.0%</div>
+                  <div class="metric-sub">Harmonic Mean</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-title">Precision (PPV)</div>
+                  <div id="metricPrecision" class="metric-value metric-val-amber">100.0%</div>
+                  <div class="metric-sub">Positive Predictive</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-title">Recall (Sensitivity)</div>
+                  <div id="metricRecall" class="metric-value metric-val-purple">100.0%</div>
+                  <div class="metric-sub">True Positive Rate</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-title">Latency</div>
+                  <div id="metricLatency" class="metric-value" style="color: #fff; font-size: 1.4rem;">4.2 ms</div>
+                  <div class="metric-sub">Model Training Time</div>
+                </div>
+              </div>
+
+              <!-- Algorithm Benchmark Table -->
+              <div style="margin-top: 1rem;">
+                <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">
+                  Cross-Algorithm Performance Benchmarks
+                </div>
+                <table class="feature-table">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Algorithm</th>
+                      <th>Accuracy</th>
+                      <th>Precision</th>
+                      <th>Recall</th>
+                      <th>F1-Score</th>
+                      <th>Latency</th>
+                      <th>Badge</th>
+                    </tr>
+                  </thead>
+                  <tbody id="benchmarksTableBody">
+                    <!-- Dynamic -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================================================================
+               STAGE 5: EVALUATION VIEW
+               ================================================================ -->
+          <div id="stage-view-evaluation" class="pipeline-view-section">
+            <div class="glass-panel">
+              <div class="panel-header">
+                <div class="panel-title"><i class="fa-solid fa-chart-line"></i> Step 5: Performance Evaluation & Metrics</div>
+                <span class="panel-badge">Confusion Matrix • ROC-AUC • Specificity</span>
+              </div>
+
+              <div class="eval-charts-grid">
+                <!-- Confusion Matrix Heatmap -->
+                <div style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+                  <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">
+                    Diagnostic Confusion Matrix
+                  </div>
+                  <table class="confusion-matrix-table">
+                    <tr>
+                      <td style="font-size: 0.72rem; color: var(--text-muted);">Actual \ Predicted</td>
+                      <td style="font-weight: 700; color: var(--accent-cyan);">Predicted Healthy</td>
+                      <td style="font-weight: 700; color: var(--accent-red);">Predicted Tumor</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: 700; color: var(--accent-cyan); text-align: left;">Actual Healthy</td>
+                      <td class="cm-cell cm-tn">
+                        <div id="cmTN" class="cm-val" style="color: var(--accent-cyan);">50</div>
+                        <div class="cm-label">True Negative (TN)</div>
+                      </td>
+                      <td class="cm-cell cm-fp">
+                        <div id="cmFP" class="cm-val" style="color: var(--accent-red);">0</div>
+                        <div class="cm-label">False Positive (FP)</div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: 700; color: var(--accent-red); text-align: left;">Actual Tumor</td>
+                      <td class="cm-cell cm-fn">
+                        <div id="cmFN" class="cm-val" style="color: var(--accent-red);">0</div>
+                        <div class="cm-label">False Negative (FN)</div>
+                      </td>
+                      <td class="cm-cell cm-tp">
+                        <div id="cmTP" class="cm-val" style="color: var(--accent-green);">150</div>
+                        <div class="cm-label">True Positive (TP)</div>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+
+                <!-- ROC Curve Chart -->
+                <div style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; height: 320px;">
+                  <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; text-align: center;">
+                    Receiver Operating Characteristic (ROC Curve)
+                  </div>
+                  <canvas id="rocCurveChart"></canvas>
+                </div>
+              </div>
+
+              <!-- Multi-Algorithm Comparison Bar Chart -->
+              <div style="margin-top: 1.25rem; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; height: 300px;">
+                <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; text-align: center;">
+                  Algorithm Accuracy vs F1-Score Comparison
+                </div>
+                <canvas id="benchmarkBarChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         TAB 2: INTERACTIVE IN-APP PYTHON CODE PLAYGROUND
+         ==================================================================== -->
+    <section id="tab-playground" class="tab-content">
+      <div class="glass-panel" style="margin-bottom: 1.25rem;">
+        <div class="panel-header">
+          <div class="panel-title"><i class="fa-solid fa-terminal"></i> In-App Python Sandbox & Code Studio</div>
+          <span class="panel-badge">Interactive Python 3.14 Execution</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          Type, modify, compile, and execute Python code right here in the web application! Select pre-made pipeline templates or author custom Machine Learning scripts. Matplotlib plots will automatically render in the terminal feed below. Press <strong>Ctrl + Enter</strong> to execute quickly.
+        </p>
+      </div>
+
+      <div class="sandbox-layout">
+        <!-- Code Editor Section -->
+        <div class="glass-panel">
+          <div class="editor-toolbar">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Template:</span>
+              <select id="templateSelector" class="template-select">
+                <!-- Dynamically loaded -->
+              </select>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="resetCodeBtn" class="btn-secondary" title="Reset template to default">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+              </button>
+              <button id="runCodeBtn" class="btn-primary">
+                <i class="fa-solid fa-play"></i> Compile & Run Script
+              </button>
+            </div>
+          </div>
+
+          <div class="code-editor-wrapper">
+            <textarea id="codeEditor" class="code-textarea" spellcheck="false" placeholder="# Type your Python program here..."></textarea>
+          </div>
+        </div>
+
+        <!-- Terminal Output Section -->
+        <div class="terminal-window">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+            </div>
+            <div class="terminal-title">python_execution_sandbox.log</div>
+            <div id="terminalLatency" style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--accent-cyan);">0 ms</div>
+          </div>
+          <div id="terminalBody" class="terminal-body">
+Click "Compile & Run Script" to execute Python code in the sandbox.
+          </div>
+          <div id="terminalPlotsArea" class="terminal-plots-area">
+            <!-- Captured Matplotlib figures appear here -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         TAB 3: HOW TO COMPILE AND RUN THE CODE (TERMINAL & DEV GUIDE)
+         ==================================================================== -->
+    <section id="tab-guide" class="tab-content">
+      <div class="guide-container">
+        <!-- Sidebar Navigation -->
+        <aside class="guide-nav">
+          <div style="font-size: 0.8rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem; text-transform: uppercase;">
+            Developer Guide
+          </div>
+          <a href="#guide-quickstart" class="guide-link active">1. Quick Start</a>
+          <a href="#guide-web-app" class="guide-link">2. Run Web Application</a>
+          <a href="#guide-cli-tool" class="guide-link">3. Run Terminal CLI</a>
+          <a href="#guide-training" class="guide-link">4. Model Training & Export</a>
+          <a href="#guide-tests" class="guide-link">5. Automated Testing</a>
+          <a href="#guide-math" class="guide-link">6. Mathematical Formulas</a>
+        </aside>
+
+        <!-- Guide Content Sections -->
+        <div class="guide-content">
+
+          <!-- Section 1: Quickstart -->
+          <div id="guide-quickstart" class="guide-section">
+            <h2><i class="fa-solid fa-rocket" style="color: var(--accent-cyan);"></i> 1. Quick Start & Environment Setup</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">
+              Ensure you have Python 3.10+ installed. Open your terminal in the project directory and create a clean virtual environment:
+            </p>
+
+            <div class="code-block-wrapper">
+              <div class="code-block-header">
+                <span>PowerShell / Command Prompt (Windows)</span>
+                <button class="code-copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+              <div class="code-block-content"># 1. Navigate to project workspace
+cd "c:\Users\Lenovo\OneDrive\Desktop\Medical Report - Brain Tumor Detection"
+
+# 2. Create virtual environment
+python -m venv venv
+
+# 3. Activate virtual environment
+.\venv\Scripts\Activate.ps1
+
+# 4. Install all dependencies
+pip install -r requirements.txt</div>
+            </div>
+          </div>
+
+          <!-- Section 2: Running the Web App -->
+          <div id="guide-web-app" class="guide-section">
+            <h2><i class="fa-solid fa-globe" style="color: var(--accent-green);"></i> 2. How to Run the Web Application</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">
+              Launch the FastAPI web server. Once running, open your browser at <code>http://localhost:8000</code>:
+            </p>
+
+            <div class="code-block-wrapper">
+              <div class="code-block-header">
+                <span>Terminal Command</span>
+                <button class="code-copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+              <div class="code-block-content">python app.py</div>
+            </div>
+          </div>
+
+          <!-- Section 3: Running the CLI -->
+          <div id="guide-cli-tool" class="guide-section">
+            <h2><i class="fa-solid fa-terminal" style="color: var(--accent-purple);"></i> 3. How to Run the Standalone CLI</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">
+              You can execute predictions and trainings directly in your command terminal without opening a browser:
+            </p>
+
+            <div class="code-block-wrapper">
+              <div class="code-block-header">
+                <span>Run Automated Demo</span>
+                <button class="code-copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+              <div class="code-block-content">python run_cli.py --demo</div>
+            </div>
+
+            <div class="code-block-wrapper">
+              <div class="code-block-header">
+                <span>Diagnose Specific MRI Scan with SVM</span>
+                <button class="code-copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+              <div class="code-block-content">python run_cli.py --image sample_images/sample_glioma_case1.png --model svm</div>
+            </div>
+
+            <div class="code-block-wrapper">
+              <div class="code-block-header">
+                <span>Train Random Forest Model with 25% Test Split</span>
+                <button class="code-copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+              <div class="code-block-content">python run_cli.py --train --model random_forest --test-split 0.25</div>
+            </div>
+          </div>
+
+          <!-- Section 4: Batch Training & Export -->
+          <div id="guide-training" class="guide-section">
+            <h2><i class="fa-solid fa-box-archive" style="color: var(--accent-amber);"></i> 4. Model Training & Serialization</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">
+              To train all 6 algorithms and export serialized <code>.pkl</code> weights to the <code>models/</code> folder:
+            </p>
+
+            <div class="code-block-wrapper">
+              <div class="code-block-header">
+                <span>Train & Save Models</span>
+                <button class="code-copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+              <div class="code-block-content">python train_models.py</div>
+            </div>
+          </div>
+
+          <!-- Section 5: Automated Testing -->
+          <div id="guide-tests" class="guide-section">
+            <h2><i class="fa-solid fa-vial-circle-check" style="color: var(--accent-blue);"></i> 5. Running Automated Pipeline Tests</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">
+              Run the full test suite to validate all 6 stages of image preprocessing, GLCM textures, model accuracy, and sandbox execution:
+            </p>
+
+            <div class="code-block-wrapper">
+              <div class="code-block-header">
+                <span>Execute Test Suite</span>
+                <button class="code-copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+              <div class="code-block-content">python test_pipeline.py</div>
+            </div>
+          </div>
+
+          <!-- Section 6: Mathematical Equations -->
+          <div id="guide-math" class="guide-section">
+            <h2><i class="fa-solid fa-square-root-variable" style="color: var(--accent-cyan);"></i> 6. Mathematical & Algorithmic Formulations</h2>
+            <div style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7;">
+              <h4 style="color: #fff; margin-top: 0.5rem;">A. Gray-Level Co-occurrence Matrix (GLCM) Equations:</h4>
+              <ul style="margin-left: 1.25rem; margin-top: 0.35rem;">
+                <li><strong>Contrast:</strong> $\sum_{i,j} |i - j|^2 \cdot p(i, j)$</li>
+                <li><strong>Dissimilarity:</strong> $\sum_{i,j} |i - j| \cdot p(i, j)$</li>
+                <li><strong>Homogeneity:</strong> $\sum_{i,j} \frac{p(i, j)}{1 + |i - j|^2}$</li>
+                <li><strong>Energy (ASM):</strong> $\sum_{i,j} p(i, j)^2$</li>
+                <li><strong>Entropy:</strong> $-\sum_{i,j} p(i, j) \log_2(p(i, j))$</li>
+              </ul>
+
+              <h4 style="color: #fff; margin-top: 1rem;">B. Otsu's Skull Stripping Threshold:</h4>
+              <p>Maximizes between-class variance: $\sigma_b^2(t) = \omega_0(t)\omega_1(t)[\mu_0(t) - \mu_1(t)]^2$</p>
+
+              <h4 style="color: #fff; margin-top: 1rem;">C. Performance Evaluation Metrics:</h4>
+              <ul style="margin-left: 1.25rem; margin-top: 0.35rem;">
+                <li><strong>Accuracy:</strong> $\frac{TP + TN}{TP + TN + FP + FN}$</li>
+                <li><strong>Sensitivity (Recall / TPR):</strong> $\frac{TP}{TP + FN}$</li>
+                <li><strong>Specificity (TNR):</strong> $\frac{TN}{TN + FP}$</li>
+                <li><strong>Precision (PPV):</strong> $\frac{TP}{TP + FP}$</li>
+                <li><strong>F1-Score:</strong> $2 \cdot \frac{\text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}$</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         TAB 4: MRI DATASET & CLINICAL GALLERY
+         ==================================================================== -->
+    <section id="tab-gallery" class="tab-content">
+      <div class="glass-panel" style="margin-bottom: 1.5rem;">
+        <div class="panel-header">
+          <div class="panel-title"><i class="fa-solid fa-images"></i> MRI Benchmark & Clinical Dataset Library</div>
+          <span class="panel-badge">High-Resolution Reference Scans</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          Browse standard histological MRI tumor categories. Click "Load into Studio" to automatically load any scan into the full preprocessing, feature extraction, and diagnostic pipeline.
+        </p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+        <!-- Card 1 -->
+        <div class="glass-panel" style="text-align: center;">
+          <img src="/sample_images/sample_glioma_case1.png" style="width: 100%; height: 220px; object-fit: contain; background: #000; border-radius: var(--radius-sm);" alt="Glioma">
+          <h3 style="font-size: 1rem; color: #fff; margin: 0.75rem 0 0.25rem 0;">Glioma / Glioblastoma Multiforme</h3>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">Infiltrative intra-axial tumor with necrotic core and edematous halo.</p>
+          <button class="btn-secondary" style="width: 100%;" onclick="loadSampleDirect('sample_glioma_case1.png')">
+            <i class="fa-solid fa-microscope"></i> Load into Studio
+          </button>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="glass-panel" style="text-align: center;">
+          <img src="/sample_images/sample_meningioma_case2.png" style="width: 100%; height: 220px; object-fit: contain; background: #000; border-radius: var(--radius-sm);" alt="Meningioma">
+          <h3 style="font-size: 1rem; color: #fff; margin: 0.75rem 0 0.25rem 0;">Meningioma Brain Tumor</h3>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">Extra-axial dural-based mass with sharp circumscribed borders.</p>
+          <button class="btn-secondary" style="width: 100%;" onclick="loadSampleDirect('sample_meningioma_case2.png')">
+            <i class="fa-solid fa-microscope"></i> Load into Studio
+          </button>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="glass-panel" style="text-align: center;">
+          <img src="/sample_images/sample_pituitary_case3.png" style="width: 100%; height: 220px; object-fit: contain; background: #000; border-radius: var(--radius-sm);" alt="Pituitary">
+          <h3 style="font-size: 1rem; color: #fff; margin: 0.75rem 0 0.25rem 0;">Pituitary Adenoma</h3>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">Sellar/suprasellar mass with homogeneous high intensity.</p>
+          <button class="btn-secondary" style="width: 100%;" onclick="loadSampleDirect('sample_pituitary_case3.png')">
+            <i class="fa-solid fa-microscope"></i> Load into Studio
+          </button>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="glass-panel" style="text-align: center;">
+          <img src="/sample_images/sample_healthy_normal.png" style="width: 100%; height: 220px; object-fit: contain; background: #000; border-radius: var(--radius-sm);" alt="Healthy">
+          <h3 style="font-size: 1rem; color: #fff; margin: 0.75rem 0 0.25rem 0;">Normal Healthy Brain MRI</h3>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">Bilateral symmetry, normal ventricular system, no focal lesions.</p>
+          <button class="btn-secondary" style="width: 100%;" onclick="loadSampleDirect('sample_healthy_normal.png')">
+            <i class="fa-solid fa-microscope"></i> Load into Studio
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====================================================================
+       CLINICAL MEDICAL REPORT MODAL (PRINTABLE / PDF EXPORT)
+       ==================================================================== -->
+  <div id="reportModal" class="modal-overlay">
+    <div class="report-modal">
+      <div id="reportContentContainer">
+        <!-- Dynamically rendered -->
+      </div>
+      <div class="report-actions">
+        <button id="closeReportBtn" class="btn-secondary" style="color: #0f172a; border-color: #cbd5e1;">Close</button>
+        <button id="printReportBtn" class="btn-primary" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff;">
+          <i class="fa-solid fa-print"></i> Print / Save as PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Helper for Direct Gallery Load -->
+  <script>
+    function loadSampleDirect(sampleFileName) {
+      const studioTabBtn = document.querySelector('[data-tab="tab-studio"]');
+      if (studioTabBtn) studioTabBtn.click();
+      
+      AppState.currentFile = null;
+      AppState.currentSampleName = sampleFileName;
+      
+      const prev = document.getElementById("selectedImagePreview");
+      const nameEl = document.getElementById("selectedImageName");
+      if (prev) prev.src = "/sample_images/" + sampleFileName;
+      if (nameEl) nameEl.innerText = sampleFileName;
+      
+      executeFullDiagnosticPipeline();
+    }
+  </script>
+
+  <!-- Core JavaScript -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
